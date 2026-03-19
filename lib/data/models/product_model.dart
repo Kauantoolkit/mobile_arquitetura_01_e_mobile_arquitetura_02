@@ -10,6 +10,8 @@ class ProductModel extends Product {
     required super.price,
     required super.image,
     super.favorite = false,
+    super.description,
+    super.category,
   });
 
   /// Cria um [ProductModel] a partir de um mapa JSON.
@@ -70,6 +72,8 @@ class ProductModel extends Product {
       price: price.toDouble(),
       image: image,
       favorite: favorite,
+      description: json['description'] as String?,
+      category: json['category'] as String?,
     );
   }
 
@@ -81,6 +85,8 @@ class ProductModel extends Product {
       'price': price,
       'image': image,
       'favorite': favorite,
+      'description': description,
+      'category': category,
     };
   }
 
@@ -92,6 +98,8 @@ class ProductModel extends Product {
       price: product.price,
       image: product.image,
       favorite: product.favorite,
+      description: product.description,
+      category: product.category,
     );
   }
 
@@ -103,6 +111,8 @@ class ProductModel extends Product {
       price: price,
       image: image,
       favorite: favorite,
+      description: description,
+      category: category,
     );
   }
 }

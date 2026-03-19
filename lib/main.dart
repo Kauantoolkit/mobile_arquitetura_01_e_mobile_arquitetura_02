@@ -5,7 +5,7 @@ import 'data/datasources/product_remote_datasource.dart';
 import 'data/datasources/product_cache_datasource.dart';
 import 'data/repositories/product_repository_impl.dart';
 import 'presentation/viewmodels/product_viewmodel.dart';
-import 'presentation/pages/product_page.dart';
+import 'presentation/pages/home_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: ProductPage(viewModel: viewModel),
+      home: HomePage(viewModel: viewModel),
     );
   }
 }

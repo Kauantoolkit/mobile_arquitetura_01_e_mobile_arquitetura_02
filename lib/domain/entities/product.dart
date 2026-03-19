@@ -16,6 +16,12 @@ class Product {
   /// Indica se o produto está marcado como favorito.
   final bool favorite;
 
+  /// Descrição detalhada do produto.
+  final String? description;
+
+  /// Categoria do produto.
+  final String? category;
+
   /// Cria um Product imutável com as propriedades informadas.
   const Product({
     required this.id,
@@ -23,6 +29,8 @@ class Product {
     required this.price,
     required this.image,
     this.favorite = false,
+    this.description,
+    this.category,
   });
 
   /// Cria uma cópia deste produto com os campos informados substituídos.
@@ -32,6 +40,8 @@ class Product {
     double? price,
     String? image,
     bool? favorite,
+    String? description,
+    String? category,
   }) {
     return Product(
       id: id ?? this.id,
@@ -39,6 +49,8 @@ class Product {
       price: price ?? this.price,
       image: image ?? this.image,
       favorite: favorite ?? this.favorite,
+      description: description ?? this.description,
+      category: category ?? this.category,
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/product_viewmodel.dart';
 import '../widgets/product_tile.dart';
+import 'product_detail_page.dart';
 
 /// Página principal que exibe a lista de produtos.
 /// Usa ValueListenableBuilder para observar mudanças de estado do ViewModel.
@@ -155,6 +156,18 @@ class ProductPage extends StatelessWidget {
               return ProductTile(
                 product: product,
                 onFavoriteToggle: () => viewModel.toggleFavorite(product.id),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductDetailPage(
+                        product: product,
+                        onFavoriteToggle: () =>
+                            viewModel.toggleFavorite(product.id),
+                      ),
+                    ),
+                  );
+                },
               );
             },
           );

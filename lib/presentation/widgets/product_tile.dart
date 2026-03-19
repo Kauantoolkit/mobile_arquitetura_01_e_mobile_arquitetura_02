@@ -10,11 +10,15 @@ class ProductTile extends StatelessWidget {
   /// Callback chamado quando o botão de favorito é pressionado.
   final VoidCallback? onFavoriteToggle;
 
+  /// Callback chamado quando o tile é tocado (navegar para detalhes).
+  final VoidCallback? onTap;
+
   /// Cria um ProductTile com o produto informado.
   const ProductTile({
     super.key,
     required this.product,
     this.onFavoriteToggle,
+    this.onTap,
   });
 
   @override
@@ -22,8 +26,11 @@ class ProductTile extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
+      clipBehavior: Clip.antiAlias,
       color: product.favorite ? Colors.amber[50] : null,
-      child: Padding(
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,11 +93,12 @@ class ProductTile extends StatelessWidget {
                 color: product.favorite ? Colors.amber[700] : Colors.grey,
                 size: 32,
               ),
-              tooltip: product.favorite 
-                  ? 'Remover dos favoritos' 
+              tooltip: product.favorite
+                  ? 'Remover dos favoritos'
                   : 'Adicionar aos favoritos',
             ),
           ],
+        ),
         ),
       ),
     );
