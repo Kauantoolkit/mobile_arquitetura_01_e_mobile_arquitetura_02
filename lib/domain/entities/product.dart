@@ -13,13 +13,34 @@ class Product {
   /// String da URL da imagem do produto.
   final String image;
 
+  /// Indica se o produto está marcado como favorito.
+  final bool favorite;
+
   /// Cria um Product imutável com as propriedades informadas.
   const Product({
     required this.id,
     required this.title,
     required this.price,
     required this.image,
+    this.favorite = false,
   });
+
+  /// Cria uma cópia deste produto com os campos informados substituídos.
+  Product copyWith({
+    int? id,
+    String? title,
+    double? price,
+    String? image,
+    bool? favorite,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      price: price ?? this.price,
+      image: image ?? this.image,
+      favorite: favorite ?? this.favorite,
+    );
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -29,13 +50,14 @@ class Product {
           id == other.id &&
           title == other.title &&
           price == other.price &&
-          image == other.image;
+          image == other.image &&
+          favorite == other.favorite;
 
   @override
-  int get hashCode => Object.hash(id, title, price, image);
+  int get hashCode => Object.hash(id, title, price, image, favorite);
 
   @override
   String toString() =>
-      'Product(id: $id, title: $title, price: $price, image: $image)';
+      'Product(id: $id, title: $title, price: $price, image: $image, favorite: $favorite)';
 }
 

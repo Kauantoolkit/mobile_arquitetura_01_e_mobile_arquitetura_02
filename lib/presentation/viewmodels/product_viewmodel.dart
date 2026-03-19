@@ -47,6 +47,31 @@ class ProductViewModel {
     }
   }
 
+  /// Alterna o status de favorito de um produto pelo ID.
+  /// Atualiza a interface automaticamente através do ValueNotifier.
+  void toggleFavorite(int productId) {
+    final currentProducts = _state.value.products;
+    
+    // Atualiza a lista de produtos com o favorito alternado
+    final updatedProducts = currentProducts.map((product) {
+      if (product.id == productId) {
+        // Cria uma cópia com o favorito alternado
+        return product.copyWith(favorite: !product.favorite);
+      }
+      return product;
+    }).toList();
+
+    // Atualiza o estado com a nova lista de produtos
+    _state.value = _state.value.copyWith(products: updatedProducts);
+  }
+
+  /// Alterna o filtro de favoritos.
+  void toggleFavoritesFilter() {
+    _state.value = _state.value.copyWith(
+      showOnlyFavorites: !_state.value.showOnlyFavorites,
+    );
+  }
+
   /// Libera o ViewModel e seus recursos.
   void dispose() {
     _state.dispose();

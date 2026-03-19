@@ -17,6 +17,44 @@ class ProductPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Produtos'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          // Botão de filtro de favoritos
+          ValueListenableBuilder(
+            valueListenable: viewModel.state,
+            builder: (context, state, child) {
+              return IconButton(
+                onPressed: () => viewModel.toggleFavoritesFilter(),
+                icon: Icon(
+                  state.showOnlyFavorites 
+                      ? Icons.favorite 
+                      : Icons.favorite_border,
+                  color: state.showOnlyFavorites ? Colors.red : null,
+                ),
+                tooltip: state.showOnlyFavorites 
+                    ? 'Mostrar todos' 
+                    : 'Filtrar favoritos',
+              );
+            },
+          ),
+          // Contador de favoritos
+          ValueListenableBuilder(
+            valueListenable: viewModel.state,
+            builder: (context, state, child) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Center(
+                  child: Text(
+                    '★ ${state.favoriteCount}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: ValueListenableBuilder(
         valueListenable: viewModel.state,
@@ -53,8 +91,37 @@ class ProductPage extends StatelessWidget {
             );
           }
 
-          // Exibe lista de produtos
-          if (state.products.isEmpty) {
+          // Lista de produtos filtrada
+          final products = state.filteredProducts;
+
+          // Exibe mensagem quando não há produtos (após filtro)
+          if (products.isEmpty) {
+            if (state.showOnlyFavorites) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.favorite_border,
+                      size: 64,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Nenhum produto favoritado',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () => viewModel.toggleFavoritesFilter(),
+                      icon: const Icon(Icons.list),
+                      label: const Text('Mostrar todos'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -80,11 +147,15 @@ class ProductPage extends StatelessWidget {
             );
           }
 
-          // Constrói a lista de produtos
+          // Constrói a lista de produtos filtrada
           return ListView.builder(
-            itemCount: state.products.length,
+            itemCount: products.length,
             itemBuilder: (context, index) {
-              return ProductTile(product: state.products[index]);
+              final product = products[index];
+              return ProductTile(
+                product: product,
+                onFavoriteToggle: () => viewModel.toggleFavorite(product.id),
+              );
             },
           );
         },

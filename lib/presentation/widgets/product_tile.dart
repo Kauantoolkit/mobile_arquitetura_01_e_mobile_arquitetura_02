@@ -2,19 +2,27 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/product.dart';
 
 /// Widget reutilizável que exibe um único produto em um layout de tile.
-/// Exibe a imagem, título e preço formatado do produto.
+/// Exibe a imagem, título, preço formatado e botão de favorito.
 class ProductTile extends StatelessWidget {
   /// O produto a ser exibido.
   final Product product;
 
+  /// Callback chamado quando o botão de favorito é pressionado.
+  final VoidCallback? onFavoriteToggle;
+
   /// Cria um ProductTile com o produto informado.
-  const ProductTile({super.key, required this.product});
+  const ProductTile({
+    super.key,
+    required this.product,
+    this.onFavoriteToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
+      color: product.favorite ? Colors.amber[50] : null,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
@@ -69,6 +77,18 @@ class ProductTile extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            // Botão de favorito
+            IconButton(
+              onPressed: onFavoriteToggle,
+              icon: Icon(
+                product.favorite ? Icons.star : Icons.star_border,
+                color: product.favorite ? Colors.amber[700] : Colors.grey,
+                size: 32,
+              ),
+              tooltip: product.favorite 
+                  ? 'Remover dos favoritos' 
+                  : 'Adicionar aos favoritos',
             ),
           ],
         ),
