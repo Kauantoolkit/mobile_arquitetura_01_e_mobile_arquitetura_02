@@ -38,12 +38,17 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/*
 
 
 */android/
 */ios/
 */macOS/
 */windows/
+/ios/*
+/linux/*
+/macOS/*
+/windows/*
 
 //ta certo isso?
 //como tira o .metadata dos commits?

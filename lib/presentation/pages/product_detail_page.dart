@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/product.dart';
+import '../viewmodels/product_viewmodel.dart';
+import 'product_form_page.dart';
 
 /// Tela de detalhes de um produto selecionado.
 /// Recebe o produto via construtor e exibe suas informações completas.
 class ProductDetailPage extends StatelessWidget {
   final Product product;
-
-  /// Callback para alternar o favorito (mantém sincronizado com a lista).
-  final VoidCallback? onFavoriteToggle;
+  final ProductViewModel viewModel;
 
   const ProductDetailPage({
     super.key,
     required this.product,
-    this.onFavoriteToggle,
+    required this.viewModel,
   });
 
   @override
@@ -23,7 +23,7 @@ class ProductDetailPage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
-            onPressed: onFavoriteToggle,
+            onPressed: () => viewModel.toggleFavorite(product.id),
             icon: Icon(
               product.favorite ? Icons.star : Icons.star_border,
               color: product.favorite ? Colors.amber[700] : null,
@@ -70,17 +70,18 @@ class ProductDetailPage extends StatelessWidget {
               if (product.category != null)
                 Chip(
                   label: Text(product.category!),
-                  backgroundColor:
-                      Theme.of(context).colorScheme.secondaryContainer,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.secondaryContainer,
                 ),
               const SizedBox(height: 12),
 
               // Nome
               Text(
                 product.title,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
 
@@ -115,13 +116,44 @@ class ProductDetailPage extends StatelessWidget {
               const SizedBox(height: 32),
 
               // Botão voltar
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Voltar para a lista'),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Voltar'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        viewModel.setSelectedProduct(product);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ProductFormPage(viewModel: viewModel),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Editar'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      onPressed: () => viewModel.deleteProduct(product.id),
+                      icon: const Icon(Icons.delete),
+                      label: const Text('Excluir'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
