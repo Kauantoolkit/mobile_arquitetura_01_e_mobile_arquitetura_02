@@ -17,6 +17,23 @@ class ProductRepositoryImpl implements ProductRepository {
   }) : _remoteDatasource = remoteDatasource,
        _cacheDatasource = cacheDatasource;
 
+  @override
+  Future<Product> addProduct(Product product) async {
+    final model = await _remoteDatasource.addProduct(product);
+    return model.toEntity();
+  }
+
+  @override
+  Future<Product> updateProduct(Product product) async {
+    final model = await _remoteDatasource.updateProduct(product);
+    return model.toEntity();
+  }
+
+  @override
+  Future<void> deleteProduct(int id) async {
+    await _remoteDatasource.deleteProduct(id);
+  }
+
   /// Busca produtos da fonte remota, com fallback de cache.
   /// Se a fonte remota falhar e existir cache, retorna os dados em cache.
   /// Lança [Failure] se a fonte remota falhar e o cache estiver vazio.

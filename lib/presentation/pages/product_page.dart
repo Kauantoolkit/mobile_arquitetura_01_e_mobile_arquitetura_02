@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../viewmodels/product_viewmodel.dart';
 import '../widgets/product_tile.dart';
 import 'product_detail_page.dart';
+import 'product_form_page.dart';
 
 /// Página principal que exibe a lista de produtos.
 /// Usa ValueListenableBuilder para observar mudanças de estado do ViewModel.
@@ -26,13 +27,13 @@ class ProductPage extends StatelessWidget {
               return IconButton(
                 onPressed: () => viewModel.toggleFavoritesFilter(),
                 icon: Icon(
-                  state.showOnlyFavorites 
-                      ? Icons.favorite 
+                  state.showOnlyFavorites
+                      ? Icons.favorite
                       : Icons.favorite_border,
                   color: state.showOnlyFavorites ? Colors.red : null,
                 ),
-                tooltip: state.showOnlyFavorites 
-                    ? 'Mostrar todos' 
+                tooltip: state.showOnlyFavorites
+                    ? 'Mostrar todos'
                     : 'Filtrar favoritos',
               );
             },
@@ -42,7 +43,7 @@ class ProductPage extends StatelessWidget {
             valueListenable: viewModel.state,
             builder: (context, state, child) {
               return Padding(
-                padding: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.only(right: 8),
                 child: Center(
                   child: Text(
                     '★ ${state.favoriteCount}',
@@ -54,6 +55,12 @@ class ProductPage extends StatelessWidget {
                 ),
               );
             },
+          ),
+          // Botão de atualizar lista
+          IconButton(
+            onPressed: () => viewModel.loadProducts(),
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Atualizar',
           ),
         ],
       ),
@@ -168,15 +175,60 @@ class ProductPage extends StatelessWidget {
                     ),
                   );
                 },
+                onEdit: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductFormPage(
+                        viewModel: viewModel,
+                        product: product,
+                      ),
+                    ),
+                  );
+                },
+                onDelete: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Excluir produto'),
+                      content: Text(
+                        'Deseja excluir "${product.title}"?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancelar'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: Text(
+                            'Excluir',
+                            style: TextStyle(color: Colors.red[700]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true) {
+                    await viewModel.deleteProduct(product.id);
+                  }
+                },
               );
             },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => viewModel.loadProducts(),
-        tooltip: 'Atualizar',
-        child: const Icon(Icons.refresh),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ProductFormPage(viewModel: viewModel),
+            ),
+          );
+        },
+        tooltip: 'Novo produto',
+        child: const Icon(Icons.add),
       ),
     );
   }

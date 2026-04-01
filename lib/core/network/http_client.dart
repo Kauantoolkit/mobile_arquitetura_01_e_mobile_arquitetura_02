@@ -34,6 +34,71 @@ class HttpClient {
     }
   }
 
+  /// Executa uma requisição POST para a URL informada com o corpo JSON.
+  /// Retorna o corpo da resposta como dynamic (Map ou List).
+  /// Lança [Failure] se a requisição falhar.
+  Future<dynamic> post(String url, Map<String, dynamic> body) async {
+    try {
+      final response = await _client.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return json.decode(response.body);
+      } else {
+        throw Failure('Request failed with status: ${response.statusCode}');
+      }
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw Failure('Network error: ${e.toString()}');
+    }
+  }
+
+  /// Executa uma requisição PUT para a URL informada com o corpo JSON.
+  /// Retorna o corpo da resposta como dynamic (Map ou List).
+  /// Lança [Failure] se a requisição falhar.
+  Future<dynamic> put(String url, Map<String, dynamic> body) async {
+    try {
+      final response = await _client.put(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return json.decode(response.body);
+      } else {
+        throw Failure('Request failed with status: ${response.statusCode}');
+      }
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw Failure('Network error: ${e.toString()}');
+    }
+  }
+
+  /// Executa uma requisição DELETE para a URL informada.
+  /// Lança [Failure] se a requisição falhar.
+  Future<void> delete(String url) async {
+    try {
+      final response = await _client.delete(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Failure('Request failed with status: ${response.statusCode}');
+      }
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw Failure('Network error: ${e.toString()}');
+    }
+  }
+
   /// Fecha o cliente HTTP e libera recursos.
   void dispose() {
     _client.close();

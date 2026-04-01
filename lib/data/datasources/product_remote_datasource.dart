@@ -1,4 +1,5 @@
 import '../../core/network/http_client.dart';
+import '../../domain/entities/product.dart';
 import '../models/product_model.dart';
 
 /// Fonte de dados remota para buscar produtos da API FakeStore.
@@ -13,7 +14,6 @@ class ProductRemoteDatasource {
     : _httpClient = httpClient;
 
   /// Busca todos os produtos da API remota.
-  /// Retorna uma lista de [ProductModel].
   Future<List<ProductModel>> getProducts() async {
     final response = await _httpClient.get('$_baseUrl/products');
 
@@ -24,6 +24,28 @@ class ProductRemoteDatasource {
     } else {
       throw Exception('Invalid response format');
     }
+  }
+
+  /// Envia um novo produto para a API (POST).
+  Future<ProductModel> addProduct(Product product) async {
+    final body = ProductModel.fromEntity(product).toJson()..remove('id');
+    final response = await _httpClient.post('$_baseUrl/products', body);
+    return ProductModel.fromJson(response as Map<String, dynamic>);
+  }
+
+  /// Atualiza um produto existente na API (PUT).
+  Future<ProductModel> updateProduct(Product product) async {
+    final body = ProductModel.fromEntity(product).toJson();
+    final response = await _httpClient.put(
+      '$_baseUrl/products/${product.id}',
+      body,
+    );
+    return ProductModel.fromJson(response as Map<String, dynamic>);
+  }
+
+  /// Remove um produto da API (DELETE).
+  Future<void> deleteProduct(int id) async {
+    await _httpClient.delete('$_baseUrl/products/$id');
   }
 }
 

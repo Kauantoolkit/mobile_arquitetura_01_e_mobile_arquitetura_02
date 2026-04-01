@@ -1,45 +1,34 @@
 import 'package:flutter/foundation.dart';
-import '../../core/errors/failure.dart';
-import '../../domain/repositories/product_repository.dart';
+import '../../services/product_service.dart';
+import '../../domain/entities/product.dart';
 import 'product_state.dart';
 
 /// ViewModel que gerencia o estado de carregamento de produtos e lógica de negócio.
 /// Usa ValueNotifier para notificar ouvintes sobre mudanças de estado.
 class ProductViewModel {
-  final ProductRepository _repository;
+  final ProductService _service;
 
-  /// StateNotifier que mantém o estado atual do produto.
   final ValueNotifier<ProductState> _state = ValueNotifier(
     const ProductState(),
   );
 
-  /// Getter público para o estado a ser usado com ValueListenableBuilder.
   ValueNotifier<ProductState> get state => _state;
 
-  /// Cria um ProductViewModel com o repositório informado.
-  ProductViewModel({required ProductRepository repository})
-    : _repository = repository;
+  ProductViewModel({required ProductService service}) : _service = service;
 
-  /// Carrega produtos do repositório.
-  /// Atualiza o estado para carregando, então sucesso ou erro conforme o resultado.
+  /// Carrega produtos do serviço.
   Future<void> loadProducts() async {
-    // Define estado de carregamento
     _state.value = _state.value.copyWith(isLoading: true, error: null);
 
     try {
-      final products = await _repository.getProducts();
+      final products = await _service.fetchProducts();
 
-      // Define estado de sucesso com produtos
       _state.value = _state.value.copyWith(
         isLoading: false,
         products: products,
         error: null,
       );
-    } on Failure catch (e) {
-      // Define estado de erro com mensagem de falha
-      _state.value = _state.value.copyWith(isLoading: false, error: e.message);
     } catch (e) {
-      // Define estado de erro com mensagem genérica
       _state.value = _state.value.copyWith(
         isLoading: false,
         error: 'Não foi possível carregar os produtos',
@@ -63,6 +52,45 @@ class ProductViewModel {
 
     // Atualiza o estado com a nova lista de produtos
     _state.value = _state.value.copyWith(products: updatedProducts);
+  }
+
+  /// Cadastra um novo produto e adiciona à lista local.
+  Future<void> addProduct(Product product) async {
+    try {
+      final created = await _service.addProduct(product);
+      // A FakeStore retorna id=21 para todos os POSTs (API fake).
+      // Usamos um id negativo único para não colidir com produtos reais.
+      final localId = -DateTime.now().millisecondsSinceEpoch;
+      final localProduct = created.copyWith(id: localId);
+      final updated = [..._state.value.products, localProduct];
+      _state.value = _state.value.copyWith(products: updated);
+    } catch (e) {
+      _state.value = _state.value.copyWith(error: 'Erro ao cadastrar produto');
+    }
+  }
+
+  /// Atualiza um produto existente na lista local.
+  Future<void> updateProduct(Product product) async {
+    try {
+      await _service.updateProduct(product);
+      final updated = _state.value.products.map((p) {
+        return p.id == product.id ? product : p;
+      }).toList();
+      _state.value = _state.value.copyWith(products: updated);
+    } catch (e) {
+      _state.value = _state.value.copyWith(error: 'Erro ao atualizar produto');
+    }
+  }
+
+  /// Remove um produto da lista local pelo id.
+  Future<void> deleteProduct(int id) async {
+    try {
+      await _service.deleteProduct(id.toString());
+      final updated = _state.value.products.where((p) => p.id != id).toList();
+      _state.value = _state.value.copyWith(products: updated);
+    } catch (e) {
+      _state.value = _state.value.copyWith(error: 'Erro ao remover produto');
+    }
   }
 
   /// Alterna o filtro de favoritos.
