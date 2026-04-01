@@ -1,7 +1,7 @@
 
 # (essa anotação está aqui mais pra não me perder mesmo): Esse repositório foi usado tanto para as atividades 4, 4b, 5
 
-# Respostas Questionário de Reflexão (Atividade 2/questionario atividade 04)
+# Respostas Questionário de Reflexão (questionario atividade 05)
 
 ## 1. Em qual camada foi implementado o mecanismo de cache? Explique por que essa decisão é adequada dentro da arquitetura proposta.
 
