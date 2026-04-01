@@ -19,9 +19,7 @@ class ProductRepositoryImpl implements ProductRepository {
   }) : _remoteDatasource = remoteDatasource,
        _cacheDatasource = cacheDatasource;
 
-  /// Busca produtos da fonte remota, com fallback de cache.
-  /// Se a fonte remota falhar e existir cache, retorna os dados em cache.
-  /// Lança [Failure] se a fonte remota falhar e o cache estiver vazio.
+  /// Busca produtos da fonte remota, com fallback de cache + pendings.
   @override
   Future<List<Product>> getProducts() async {
     try {
@@ -31,16 +29,29 @@ class ProductRepositoryImpl implements ProductRepository {
       // Salva no cache para uso futuro
       _cacheDatasource.save(products);
 
-      return products.map((model) => model.toEntity()).toList();
+      final pendings = _cacheDatasource
+          .getPendingCreates()
+          .map((m) => m.toEntity())
+          .toList();
+      return [
+        ...pendings,
+        ...products.map((model) => model.toEntity()).toList(),
+      ];
     } on Failure {
       // Se a fonte remota falhar, tenta obter do cache
       final cachedProducts = _cacheDatasource.get();
 
-      if (cachedProducts != null && cachedProducts.isNotEmpty) {
-        developer.log('Using cached products (remote failed)');
-
-        // Retorna dados em cache se disponível
-        return cachedProducts.map((model) => model.toEntity()).toList();
+      // Fallback: pendings + cache
+      final pendings = _cacheDatasource
+          .getPendingCreates()
+          .map((m) => m.toEntity())
+          .toList();
+      final cached =
+          cachedProducts?.map((model) => model.toEntity()).toList() ?? [];
+      final all = [...pendings, ...cached];
+      if (all.isNotEmpty) {
+        developer.log('Using cached + pendings (remote failed)');
+        return all;
       }
 
       // Relança a falha original se não houver cache disponível
@@ -49,10 +60,17 @@ class ProductRepositoryImpl implements ProductRepository {
       // Tenta usar cache em qualquer outra exceção
       final cachedProducts = _cacheDatasource.get();
 
-      if (cachedProducts != null && cachedProducts.isNotEmpty) {
-        developer.log('Using cached products (unexpected error)');
-
-        return cachedProducts.map((model) => model.toEntity()).toList();
+      // Fallback: pendings + cache
+      final pendings = _cacheDatasource
+          .getPendingCreates()
+          .map((m) => m.toEntity())
+          .toList();
+      final cached =
+          cachedProducts?.map((model) => model.toEntity()).toList() ?? [];
+      final all = [...pendings, ...cached];
+      if (all.isNotEmpty) {
+        developer.log('Using cached + pendings (unexpected error)');
+        return all;
       }
 
       // Converte para Failure se ainda não for
@@ -63,15 +81,23 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Product> createProduct(Product product) async {
     try {
-      final model = ProductModel.fromEntity(product);
-      final createdModel = await _remoteDatasource.createProduct(model);
+      final model = ProductModel.fromEntity(product.copyWith(isPending: true));
+      _cacheDatasource.savePendingCreate(model); // Save locally first
 
-      // Limpa cache após criação (invalidação)
+      // Try remote without isPending
+      final remoteModel = ProductModel.fromEntity(
+        model.copyWith(isPending: null),
+      );
+      final createdModel = await _remoteDatasource.createProduct(remoteModel);
+
+      // Success: remove pending, invalidate list cache
+      _cacheDatasource.removePendingCreate(model.id);
       _cacheDatasource.clear();
 
       return createdModel.toEntity();
     } catch (e) {
-      throw Failure('Failed to create product: ${e.toString()}');
+      // Fail: keep pending, notify user
+      throw Failure('Failed to sync product (saved locally): ${e.toString()}');
     }
   }
 

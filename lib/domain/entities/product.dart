@@ -22,6 +22,9 @@ class Product {
   /// Categoria do produto.
   final String? category;
 
+  /// Indica se o produto está pendente de sincronização remota (offline).
+  final bool? isPending;
+
   /// Cria um Product imutável com as propriedades informadas.
   const Product({
     required this.id,
@@ -31,6 +34,7 @@ class Product {
     this.favorite = false,
     this.description,
     this.category,
+    this.isPending,
   });
 
   /// Cria uma cópia deste produto com os campos informados substituídos.
@@ -42,6 +46,7 @@ class Product {
     bool? favorite,
     String? description,
     String? category,
+    bool? isPending,
   }) {
     return Product(
       id: id ?? this.id,
@@ -51,6 +56,7 @@ class Product {
       favorite: favorite ?? this.favorite,
       description: description ?? this.description,
       category: category ?? this.category,
+      isPending: isPending ?? this.isPending,
     );
   }
 
@@ -63,13 +69,13 @@ class Product {
           title == other.title &&
           price == other.price &&
           image == other.image &&
-          favorite == other.favorite;
+          favorite == other.favorite &&
+          isPending == other.isPending;
 
   @override
-  int get hashCode => Object.hash(id, title, price, image, favorite);
+  int get hashCode => Object.hash(id, title, price, image, favorite, isPending);
 
   @override
   String toString() =>
-      'Product(id: $id, title: $title, price: $price, image: $image, favorite: $favorite)';
+      'Product(id: $id, title: $title, price: $price, image: $image, favorite: $favorite, isPending: $isPending)';
 }
-

@@ -160,17 +160,15 @@ class _ProductPageState extends State<ProductPage> {
                           icon: const Icon(Icons.refresh),
                           label: const Text('Tentar Novamente'),
                         ),
-                        if (!errorContainsNetwork)
-                          ElevatedButton.icon(
-                            onPressed: () => widget.viewModel.loadProducts(
-                              maxRetries: 0,
-                            ), // No retry, use cache
-                            icon: const Icon(Icons.folder),
-                            label: const Text('Usar Cache Offline'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey[600],
-                            ),
+                        ElevatedButton.icon(
+                          onPressed: () =>
+                              widget.viewModel.loadProducts(maxRetries: 0),
+                          icon: const Icon(Icons.folder),
+                          label: const Text('Ver Local'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
                           ),
+                        ),
                       ],
                     ),
                   ],

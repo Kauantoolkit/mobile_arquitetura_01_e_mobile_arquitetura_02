@@ -107,8 +107,11 @@ class ProductViewModel {
     } on Failure catch (e) {
       _state.value = _state.value.copyWith(
         isSubmitting: false,
-        formError: e.message,
+        formError: e.message.contains('saved locally')
+            ? 'Salvo localmente (pendente de sync). Lista atualizada.'
+            : e.message,
       );
+      await loadProducts(); // Reload to show pending
       rethrow;
     } catch (e) {
       _state.value = _state.value.copyWith(

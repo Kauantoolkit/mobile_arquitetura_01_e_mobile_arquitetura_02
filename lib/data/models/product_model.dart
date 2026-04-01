@@ -12,12 +12,16 @@ class ProductModel extends Product {
     super.favorite = false,
     super.description,
     super.category,
+    super.isPending,
   });
 
   /// Cria um [ProductModel] a partir de um mapa JSON.
   /// Lança [FormatException] caso o JSON seja inválido ou ausente campos obrigatórios.
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     // Valida se o JSON não é nulo
+
+    // isPending always false from API
+    const bool isPending = false;
 
     // Valida e obtém o campo 'id'
     final id = json['id'];
@@ -74,6 +78,7 @@ class ProductModel extends Product {
       favorite: favorite,
       description: json['description'] as String?,
       category: json['category'] as String?,
+      isPending: isPending,
     );
   }
 
@@ -87,6 +92,7 @@ class ProductModel extends Product {
       'favorite': favorite,
       'description': description,
       'category': category,
+      // Exclude isPending for API
     };
   }
 
@@ -100,6 +106,7 @@ class ProductModel extends Product {
       favorite: product.favorite,
       description: product.description,
       category: product.category,
+      isPending: product.isPending,
     );
   }
 
@@ -113,6 +120,7 @@ class ProductModel extends Product {
       favorite: favorite,
       description: description,
       category: category,
+      isPending: isPending,
     );
   }
 }
