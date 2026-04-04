@@ -2,19 +2,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:mobile_arquitetura_01/core/errors/failure.dart';
 import 'package:mobile_arquitetura_01/domain/entities/product.dart';
-import 'package:mobile_arquitetura_01/domain/repositories/product_repository.dart';
+import 'package:mobile_arquitetura_01/services/product_service.dart';
 import 'package:mobile_arquitetura_01/presentation/viewmodels/product_viewmodel.dart';
 
-// Mock class for ProductRepository
-class MockProductRepository extends Mock implements ProductRepository {}
+class MockProductService extends Mock implements ProductService {}
 
 void main() {
   late ProductViewModel viewModel;
-  late MockProductRepository mockRepository;
+  late MockProductService mockService;
 
   setUp(() {
-    mockRepository = MockProductRepository();
-    viewModel = ProductViewModel(repository: mockRepository);
+    mockService = MockProductService();
+    viewModel = ProductViewModel(service: mockService);
   });
 
   tearDown(() {
@@ -38,95 +37,75 @@ void main() {
     ];
 
     test('Initial state should have isLoading as false and empty products', () {
-      // Assert
       expect(viewModel.state.value.isLoading, false);
       expect(viewModel.state.value.products, isEmpty);
       expect(viewModel.state.value.error, isNull);
     });
 
     test('loadProducts should update state to loading', () async {
-      // Arrange
       when(
-        () => mockRepository.getProducts(),
+        () => mockService.fetchProducts(),
       ).thenAnswer((_) async => testProducts);
 
-      // Act
       final future = viewModel.loadProducts();
 
-      // Assert - state should be loading immediately
       expect(viewModel.state.value.isLoading, true);
 
-      // Wait for completion
       await future;
     });
 
     test('loadProducts should return products on success', () async {
-      // Arrange
       when(
-        () => mockRepository.getProducts(),
+        () => mockService.fetchProducts(),
       ).thenAnswer((_) async => testProducts);
 
-      // Act
       await viewModel.loadProducts();
 
-      // Assert
       expect(viewModel.state.value.isLoading, false);
       expect(viewModel.state.value.products, testProducts);
       expect(viewModel.state.value.error, isNull);
-      verify(() => mockRepository.getProducts()).called(1);
+      verify(() => mockService.fetchProducts()).called(1);
     });
 
     test('loadProducts should handle Failure and update error state', () async {
-      // Arrange
       when(
-        () => mockRepository.getProducts(),
+        () => mockService.fetchProducts(),
       ).thenThrow(const Failure('Network error'));
 
-      // Act
       await viewModel.loadProducts();
 
-      // Assert
       expect(viewModel.state.value.isLoading, false);
       expect(viewModel.state.value.products, isEmpty);
       expect(viewModel.state.value.error, 'Network error');
     });
 
-    test(
-      'loadProducts should handle generic exception and update error state',
-      () async {
-        // Arrange
-        when(
-          () => mockRepository.getProducts(),
-        ).thenThrow(Exception('Unexpected error'));
+    test('loadProducts should handle generic exception and update error state', () async {
+      when(
+        () => mockService.fetchProducts(),
+      ).thenThrow(Exception('Unexpected error'));
 
-        // Act
-        await viewModel.loadProducts();
+      await viewModel.loadProducts();
 
-        // Assert
-        expect(viewModel.state.value.isLoading, false);
-        expect(viewModel.state.value.products, isEmpty);
-        expect(
-          viewModel.state.value.error,
-          'Não foi possível carregar os produtos',
-        );
-      },
-    );
+      expect(viewModel.state.value.isLoading, false);
+      expect(viewModel.state.value.products, isEmpty);
+      expect(
+        viewModel.state.value.error,
+        'Não foi possível carregar os produtos',
+      );
+    });
 
     test('loadProducts should notify listeners on state change', () async {
-      // Arrange
       var notificationCount = 0;
       viewModel.state.addListener(() {
         notificationCount++;
       });
 
       when(
-        () => mockRepository.getProducts(),
+        () => mockService.fetchProducts(),
       ).thenAnswer((_) async => testProducts);
 
-      // Act
       await viewModel.loadProducts();
 
-      // Assert - should notify at least twice: once for loading, once for success
       expect(notificationCount, greaterThanOrEqualTo(2));
     });
   });

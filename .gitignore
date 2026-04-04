@@ -44,6 +44,10 @@ app.*.map.json
 */ios/
 */macOS/
 */windows/
+/android/*
+/ios/*
+linux/*
+macOS/*
 
 //ta certo isso?
 //como tira o .metadata dos commits?

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../core/errors/failure.dart';
 import '../../services/product_service.dart';
 import '../../domain/entities/product.dart';
 import 'product_state.dart';
@@ -22,11 +23,15 @@ class ProductViewModel {
 
     try {
       final products = await _service.fetchProducts();
-
       _state.value = _state.value.copyWith(
         isLoading: false,
         products: products,
         error: null,
+      );
+    } on Failure catch (e) {
+      _state.value = _state.value.copyWith(
+        isLoading: false,
+        error: e.message,
       );
     } catch (e) {
       _state.value = _state.value.copyWith(
@@ -37,39 +42,37 @@ class ProductViewModel {
   }
 
   /// Alterna o status de favorito de um produto pelo ID.
-  /// Atualiza a interface automaticamente através do ValueNotifier.
   void toggleFavorite(int productId) {
-    final currentProducts = _state.value.products;
-    
-    // Atualiza a lista de produtos com o favorito alternado
-    final updatedProducts = currentProducts.map((product) {
+    final updated = _state.value.products.map((product) {
       if (product.id == productId) {
-        // Cria uma cópia com o favorito alternado
         return product.copyWith(favorite: !product.favorite);
       }
       return product;
     }).toList();
-
-    // Atualiza o estado com a nova lista de produtos
-    _state.value = _state.value.copyWith(products: updatedProducts);
+    _state.value = _state.value.copyWith(products: updated);
   }
 
-  /// Cadastra um novo produto e adiciona à lista local.
+  /// Cadastra um novo produto.
+  /// Se offline, persiste localmente com isPending=true.
   Future<void> addProduct(Product product) async {
     try {
       final created = await _service.addProduct(product);
-      // A FakeStore retorna id=21 para todos os POSTs (API fake).
-      // Usamos um id negativo único para não colidir com produtos reais.
+      // FakeStore sempre retorna id=21; usamos id negativo único para não colidir
       final localId = -DateTime.now().millisecondsSinceEpoch;
       final localProduct = created.copyWith(id: localId);
       final updated = [..._state.value.products, localProduct];
       _state.value = _state.value.copyWith(products: updated);
-    } catch (e) {
-      _state.value = _state.value.copyWith(error: 'Erro ao cadastrar produto');
+    } catch (_) {
+      // Offline: adiciona à lista local como pendente
+      final localId = -DateTime.now().millisecondsSinceEpoch;
+      final localProduct = product.copyWith(id: localId, isPending: true);
+      final updated = [..._state.value.products, localProduct];
+      _state.value = _state.value.copyWith(products: updated);
     }
   }
 
-  /// Atualiza um produto existente na lista local.
+  /// Atualiza um produto existente.
+  /// Se offline, aplica a edição localmente com isPending=true.
   Future<void> updateProduct(Product product) async {
     try {
       await _service.updateProduct(product);
@@ -77,19 +80,25 @@ class ProductViewModel {
         return p.id == product.id ? product : p;
       }).toList();
       _state.value = _state.value.copyWith(products: updated);
-    } catch (e) {
-      _state.value = _state.value.copyWith(error: 'Erro ao atualizar produto');
+    } catch (_) {
+      // Offline: aplica a edição localmente como pendente
+      final updated = _state.value.products.map((p) {
+        return p.id == product.id ? product.copyWith(isPending: true) : p;
+      }).toList();
+      _state.value = _state.value.copyWith(products: updated);
     }
   }
 
-  /// Remove um produto da lista local pelo id.
+  /// Remove um produto da lista pelo id.
+  /// Se offline, remove localmente de qualquer forma.
   Future<void> deleteProduct(int id) async {
     try {
       await _service.deleteProduct(id.toString());
+    } catch (_) {
+      // Offline: remove localmente de qualquer forma
+    } finally {
       final updated = _state.value.products.where((p) => p.id != id).toList();
       _state.value = _state.value.copyWith(products: updated);
-    } catch (e) {
-      _state.value = _state.value.copyWith(error: 'Erro ao remover produto');
     }
   }
 
@@ -105,4 +114,3 @@ class ProductViewModel {
     _state.dispose();
   }
 }
-

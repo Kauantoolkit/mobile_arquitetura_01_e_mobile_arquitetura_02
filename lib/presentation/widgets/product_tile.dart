@@ -72,7 +72,24 @@ class ProductTile extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  if (product.isPending)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(
+                        children: [
+                          Icon(Icons.sync, size: 12, color: Colors.orange[700]),
+                          const SizedBox(width: 3),
+                          Text(
+                            'Pendente de sync',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.orange[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 4),
                   Text(
                     '\$${product.price.toStringAsFixed(2)}',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
