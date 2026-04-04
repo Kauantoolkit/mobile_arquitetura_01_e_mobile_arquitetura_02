@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/kauan/Desktop/computaria/organizando-meus-codigos/atividade-09-mobile/atividades-4-4b-5-e-7/**)",
+      "Bash(done)",
+      "Bash(flutter analyze:*)"
+    ]
+  }
+}

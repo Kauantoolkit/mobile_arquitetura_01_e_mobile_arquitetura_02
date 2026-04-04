@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:developer' as developer;
 import '../../core/errors/failure.dart';
-import '../../../domain/entities/product.dart';
+import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
 import 'product_state.dart';
 
@@ -94,24 +94,28 @@ class ProductViewModel {
   }
 
   /// Cria um novo produto.
+  /// Retorna o produto criado (remoto ou local). Nunca relança em salvas locais.
   Future<Product> createProduct(Product product) async {
     _state.value = _state.value.copyWith(isSubmitting: true, formError: null);
 
     try {
       final created = await _repository.createProduct(product);
-
-      await loadProducts();
+      await loadProducts(maxRetries: 0);
       setSelectedProduct(null);
-
+      _state.value = _state.value.copyWith(isSubmitting: false);
       return created;
     } on Failure catch (e) {
+      if (e.isLocalSave) {
+        // Salvo localmente: trata como sucesso — form vai fechar normalmente
+        await loadProducts(maxRetries: 0);
+        setSelectedProduct(null);
+        _state.value = _state.value.copyWith(isSubmitting: false);
+        return product.copyWith(isPending: true);
+      }
       _state.value = _state.value.copyWith(
         isSubmitting: false,
-        formError: e.message.contains('saved locally')
-            ? 'Salvo localmente (pendente de sync). Lista atualizada.'
-            : e.message,
+        formError: e.message,
       );
-      await loadProducts(); // Reload to show pending
       rethrow;
     } catch (e) {
       _state.value = _state.value.copyWith(
@@ -123,23 +127,35 @@ class ProductViewModel {
   }
 
   /// Atualiza produto existente.
+  /// Retorna o produto atualizado (remoto ou local). Nunca relança em salvas locais.
   Future<Product> updateProduct(Product product) async {
+    print('[VM] updateProduct: id=${product.id} title="${product.title}"');
     _state.value = _state.value.copyWith(isSubmitting: true, formError: null);
 
     try {
       final updated = await _repository.updateProduct(product);
-
-      await loadProducts();
+      print('[VM] updateProduct: sucesso remoto, rodando loadProducts');
+      await loadProducts(maxRetries: 0);
       setSelectedProduct(null);
-
+      _state.value = _state.value.copyWith(isSubmitting: false);
       return updated;
     } on Failure catch (e) {
+      print('[VM] updateProduct Failure: isLocalSave=${e.isLocalSave} msg="${e.message}"');
+      if (e.isLocalSave) {
+        print('[VM] updateProduct: salvo localmente, rodando loadProducts');
+        await loadProducts(maxRetries: 0);
+        print('[VM] updateProduct: loadProducts ok, produtos na lista: ${_state.value.products.length}');
+        setSelectedProduct(null);
+        _state.value = _state.value.copyWith(isSubmitting: false);
+        return product.copyWith(isPending: true);
+      }
       _state.value = _state.value.copyWith(
         isSubmitting: false,
         formError: e.message,
       );
       rethrow;
     } catch (e) {
+      print('[VM] updateProduct UNEXPECTED: $e');
       _state.value = _state.value.copyWith(
         isSubmitting: false,
         formError: 'Erro inesperado ao atualizar produto',
@@ -154,12 +170,15 @@ class ProductViewModel {
 
     try {
       await _repository.deleteProduct(id);
-      await loadProducts();
     } on Failure catch (e) {
-      _state.value = _state.value.copyWith(isLoading: false, error: e.message);
-      rethrow;
+      if (!e.isLocalSave) {
+        _state.value = _state.value.copyWith(isLoading: false, error: e.message);
+        rethrow;
+      }
+      // isLocalSave: item já oculto via pendingDeletes, trata como sucesso
     } finally {
       _state.value = _state.value.copyWith(isLoading: false);
+      await loadProducts(maxRetries: 0);
     }
   }
 

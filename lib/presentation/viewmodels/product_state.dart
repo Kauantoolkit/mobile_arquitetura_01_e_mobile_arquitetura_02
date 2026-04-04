@@ -1,5 +1,7 @@
 import '../../domain/entities/product.dart';
 
+const _absent = Object();
+
 /// Classe de estado representando o estado atual do carregamento de produtos.
 class ProductState {
   /// Se os produtos estão sendo carregados atualmente.
@@ -47,22 +49,26 @@ class ProductState {
   }
 
   /// Cria uma cópia deste estado com os campos informados substituídos.
+  /// Para limpar um campo nullable (selectedProduct, error, formError),
+  /// passe explicitamente `null` — o padrão [_absent] indica "não alterar".
   ProductState copyWith({
     bool? isLoading,
     bool? isSubmitting,
     List<Product>? products,
-    Product? selectedProduct,
-    String? error,
-    String? formError,
+    Object? selectedProduct = _absent,
+    Object? error = _absent,
+    Object? formError = _absent,
     bool? showOnlyFavorites,
   }) {
     return ProductState(
       isLoading: isLoading ?? this.isLoading,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       products: products ?? this.products,
-      selectedProduct: selectedProduct ?? this.selectedProduct,
-      error: error ?? this.error,
-      formError: formError ?? this.formError,
+      selectedProduct: selectedProduct == _absent
+          ? this.selectedProduct
+          : selectedProduct as Product?,
+      error: error == _absent ? this.error : error as String?,
+      formError: formError == _absent ? this.formError : formError as String?,
       showOnlyFavorites: showOnlyFavorites ?? this.showOnlyFavorites,
     );
   }

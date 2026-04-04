@@ -50,8 +50,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
     widget.viewModel.clearFormError();
 
+    final selectedProduct = widget.viewModel.state.value.selectedProduct;
     final product = Product(
-      id: widget.viewModel.state.value.selectedProduct?.id ?? 0,
+      id: selectedProduct?.id ?? 0,
       title: _titleController.text,
       price: double.parse(_priceController.text),
       image: _imageController.text,
@@ -61,19 +62,26 @@ class _ProductFormPageState extends State<ProductFormPage> {
       category: _category?.isEmpty ?? true ? null : _category,
     );
 
+    print('[FORM] _submit: selectedProduct=${selectedProduct?.id} | product.id=${product.id} | title="${product.title}"');
+
     try {
-      if (widget.viewModel.state.value.selectedProduct == null) {
+      if (selectedProduct == null) {
+        print('[FORM] modo CREATE');
         await widget.viewModel.createProduct(product);
+        print('[FORM] createProduct retornou — chamando pop');
         if (mounted) {
           Navigator.pop(context, true); // Sucesso
         }
       } else {
+        print('[FORM] modo UPDATE (id=${selectedProduct.id})');
         await widget.viewModel.updateProduct(product);
+        print('[FORM] updateProduct retornou — chamando pop');
         if (mounted) {
           Navigator.pop(context, true);
         }
       }
     } catch (e) {
+      print('[FORM] EXCEPTION capturada: $e');
       // Erro já tratado no ViewModel (formError)
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(

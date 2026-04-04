@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/product_viewmodel.dart';
 import '../widgets/product_tile.dart';
-import '../../../../domain/entities/product.dart';
+import '../../domain/entities/product.dart';
 import 'product_form_page.dart';
 import 'product_detail_page.dart';
 

@@ -128,15 +128,21 @@ class ProductDetailPage extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {
+                      onPressed: () async {
                         viewModel.setSelectedProduct(product);
-                        Navigator.push(
+                        final saved = await Navigator.push<bool>(
                           context,
                           MaterialPageRoute(
                             builder: (_) =>
                                 ProductFormPage(viewModel: viewModel),
                           ),
                         );
+                        // Form retorna true em sucesso (local ou remoto).
+                        // DetailPage tem snapshot antigo, então volta pra lista
+                        // que está sempre atualizada pelo ViewModel.
+                        if (saved == true && context.mounted) {
+                          Navigator.pop(context);
+                        }
                       },
                       icon: const Icon(Icons.edit),
                       label: const Text('Editar'),
@@ -148,7 +154,10 @@ class ProductDetailPage extends StatelessWidget {
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
-                      onPressed: () => viewModel.deleteProduct(product.id),
+                      onPressed: () async {
+                        await viewModel.deleteProduct(product.id);
+                        if (context.mounted) Navigator.pop(context);
+                      },
                       icon: const Icon(Icons.delete),
                       label: const Text('Excluir'),
                     ),
