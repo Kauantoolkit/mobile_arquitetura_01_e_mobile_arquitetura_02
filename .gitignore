@@ -53,3 +53,5 @@ app.*.map.json
 //ta certo isso?
 //como tira o .metadata dos commits?
 .metadata
+//claude pra gerar uml
+.claude/settings.local.json

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/product.dart';
 import '../viewmodels/product_viewmodel.dart';
-import 'product_form_page.dart';
+import '../../../main.dart';
 
 /// Tela de detalhes de um produto selecionado.
 /// Recebe o produto via construtor e exibe suas informações completas.
@@ -21,6 +21,12 @@ class ProductDetailPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Detalhes do Produto'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.home),
+          tooltip: 'Voltar ao início',
+          onPressed: () =>
+              Navigator.popUntil(context, ModalRoute.withName(AppRoutes.home)),
+        ),
         actions: [
           IconButton(
             onPressed: () => viewModel.toggleFavorite(product.id),
@@ -130,12 +136,9 @@ class ProductDetailPage extends StatelessWidget {
                     child: ElevatedButton.icon(
                       onPressed: () async {
                         viewModel.setSelectedProduct(product);
-                        final saved = await Navigator.push<bool>(
+                        final saved = await Navigator.pushNamed<bool>(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                ProductFormPage(viewModel: viewModel),
-                          ),
+                          AppRoutes.productForm,
                         );
                         // Form retorna true em sucesso (local ou remoto).
                         // DetailPage tem snapshot antigo, então volta pra lista

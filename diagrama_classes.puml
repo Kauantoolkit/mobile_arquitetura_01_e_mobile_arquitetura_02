@@ -1,0 +1,274 @@
+@startuml Diagrama de Classes - App de Produtos
+
+skinparam classAttributeIconSize 0
+skinparam groupInheritance 2
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+skinparam class {
+  BackgroundColor White
+  BorderColor #333333
+  ArrowColor #333333
+}
+
+skinparam package {
+  BackgroundColor #F8F8FF
+  BorderColor #AAAAAA
+}
+
+' ─────────────────────────────────────────────
+' CAMADA: CORE
+' ─────────────────────────────────────────────
+package "core" #EAF4FB {
+
+  class HttpClient {
+    - _client: http.Client
+    --
+    + {static} maxRetries: int
+    + {static} timeoutDuration: Duration
+    --
+    + get(url: String): Future<dynamic>
+    + post(url: String, body: dynamic): Future<dynamic>
+    + put(url: String, body: dynamic): Future<dynamic>
+    + delete(url: String): Future<void>
+    + dispose(): void
+  }
+
+  class Failure {
+    + message: String
+    + isLocalSave: bool
+    --
+    + toString(): String
+  }
+
+  note right of Failure
+    Implementa Exception.
+    isLocalSave = true quando
+    operação foi salva offline
+    mas falhou no remoto.
+  end note
+}
+
+' ─────────────────────────────────────────────
+' CAMADA: DOMAIN
+' ─────────────────────────────────────────────
+package "domain" #EAF7EA {
+
+  class Product {
+    + id: int
+    + title: String
+    + price: double
+    + image: String
+    + favorite: bool
+    + description: String?
+    + category: String?
+    + isPending: bool?
+    --
+    + copyWith(...): Product
+    + operator ==(): bool
+    + hashCode: int
+  }
+
+  abstract class ProductRepository {
+    + getProducts(): Future<List<Product>>
+    + createProduct(product: Product): Future<Product>
+    + updateProduct(product: Product): Future<Product>
+    + deleteProduct(id: int): Future<void>
+  }
+}
+
+' ─────────────────────────────────────────────
+' CAMADA: DATA
+' ─────────────────────────────────────────────
+package "data" #FEF9E7 {
+
+  class ProductModel {
+    --
+    + {static} fromJson(json: Map): ProductModel
+    + {static} fromEntity(product: Product): ProductModel
+    + toJson(): Map<String, dynamic>
+    + toEntity(): Product
+  }
+
+  class ProductRemoteDatasource {
+    - _httpClient: HttpClient
+    - {static} _baseUrl: String
+    --
+    + getProducts(): Future<List<ProductModel>>
+    + createProduct(product: ProductModel): Future<ProductModel>
+    + updateProduct(product: ProductModel): Future<ProductModel>
+    + deleteProduct(id: int): Future<void>
+  }
+
+  class ProductCacheDatasource {
+    - _cachedProducts: List<ProductModel>?
+    - _pendingCreates: List<ProductModel>
+    - _pendingUpdates: List<ProductModel>
+    - _pendingDeletes: Set<int>
+    --
+    + save(products: List<ProductModel>): void
+    + get(): List<ProductModel>?
+    + clear(): void
+    + savePendingCreate(product: ProductModel): void
+    + removePendingCreate(id: int): void
+    + getPendingCreates(): List<ProductModel>
+    + savePendingUpdate(product: ProductModel): void
+    + removePendingUpdate(id: int): void
+    + getPendingUpdates(): List<ProductModel>
+    + savePendingDelete(id: int): void
+    + removePendingDelete(id: int): void
+    + getPendingDeletes(): Set<int>
+  }
+
+  class ProductRepositoryImpl {
+    - _remoteDatasource: ProductRemoteDatasource
+    - _cacheDatasource: ProductCacheDatasource
+    --
+    + getProducts(): Future<List<Product>>
+    + createProduct(product: Product): Future<Product>
+    + updateProduct(product: Product): Future<Product>
+    + deleteProduct(id: int): Future<void>
+  }
+}
+
+' ─────────────────────────────────────────────
+' CAMADA: PRESENTATION - ViewModel
+' ─────────────────────────────────────────────
+package "presentation / viewmodels" #F9EBEA {
+
+  class ProductState {
+    + isLoading: bool
+    + isSubmitting: bool
+    + products: List<Product>
+    + selectedProduct: Product?
+    + error: String?
+    + formError: String?
+    + showOnlyFavorites: bool
+    --
+    + favoriteCount: int  <<getter>>
+    + filteredProducts: List<Product>  <<getter>>
+    + copyWith(...): ProductState
+  }
+
+  class ProductViewModel {
+    - _repository: ProductRepository
+    - _state: ValueNotifier<ProductState>
+    --
+    + state: ValueNotifier<ProductState>  <<getter>>
+    --
+    + loadProducts(maxRetries: int): Future<void>
+    + toggleFavorite(productId: int): void
+    + toggleFavoritesFilter(): void
+    + setSelectedProduct(product: Product?): void
+    + createProduct(product: Product): Future<Product>
+    + updateProduct(product: Product): Future<Product>
+    + deleteProduct(id: int): Future<void>
+    + clearFormError(): void
+    + dispose(): void
+  }
+}
+
+' ─────────────────────────────────────────────
+' CAMADA: PRESENTATION - Pages & Widgets
+' ─────────────────────────────────────────────
+package "presentation / pages & widgets" #F5EEF8 {
+
+  abstract class AppRoutes {
+    + {static} home: String = "/"
+    + {static} products: String = "/products"
+    + {static} productDetail: String = "/product/detail"
+    + {static} productForm: String = "/product/form"
+  }
+
+  class MyApp {
+    - _viewModel: ProductViewModel
+    --
+    + build(context): Widget
+  }
+
+  class HomePage {
+    + viewModel: ProductViewModel
+    --
+    + build(context): Widget
+  }
+
+  class ProductPage {
+    + viewModel: ProductViewModel
+    --
+    + build(context): Widget
+    - _showDeleteDialog(...): void
+  }
+
+  class ProductDetailPage {
+    + product: Product
+    + viewModel: ProductViewModel
+    --
+    + build(context): Widget
+  }
+
+  class ProductFormPage {
+    + viewModel: ProductViewModel
+    --
+    - _formKey: GlobalKey<FormState>
+    - _titleController: TextEditingController
+    - _priceController: TextEditingController
+    - _imageController: TextEditingController
+    - _descriptionController: TextEditingController
+    --
+    + build(context): Widget
+    - _submit(): Future<void>
+  }
+
+  class ProductTile {
+    + product: Product
+    + onFavoriteToggle: VoidCallback?
+    + onTap: VoidCallback?
+    --
+    + build(context): Widget
+  }
+}
+
+' ─────────────────────────────────────────────
+' RELACIONAMENTOS
+' ─────────────────────────────────────────────
+
+' Herança / Realização
+ProductModel --|> Product : extends
+ProductRepositoryImpl ..|> ProductRepository : implements
+
+' Composição (objeto criado e destruído junto com o dono)
+ProductViewModel *-- ProductState : gerencia via ValueNotifier
+MyApp *-- ProductViewModel : cria e possui
+
+' Agregação (dependência injetada de fora — objeto pode sobreviver ao dono)
+ProductRepositoryImpl o-- ProductRemoteDatasource : recebe por injeção
+ProductRepositoryImpl o-- ProductCacheDatasource : recebe por injeção
+ProductRemoteDatasource o-- HttpClient : recebe por injeção
+
+' Agregação (campo armazenado, injetado via construtor)
+ProductViewModel o-- ProductRepository : usa (injetado)
+
+' Associação (referencia sem posse)
+ProductState o-- Product : lista de produtos
+ProductCacheDatasource o-- ProductModel : armazena
+
+' Dependências (usa pontualmente)
+ProductRemoteDatasource ..> ProductModel : cria/retorna
+HttpClient ..> Failure : lança
+ProductRepositoryImpl ..> Failure : lança
+
+' Telas → ViewModel
+HomePage --> ProductViewModel : usa
+ProductPage --> ProductViewModel : usa
+ProductDetailPage --> ProductViewModel : usa
+ProductFormPage --> ProductViewModel : usa
+
+' Telas → Entidades / Rotas
+ProductDetailPage --> Product : exibe
+ProductTile --> Product : exibe
+ProductPage ..> AppRoutes : navega via
+ProductDetailPage ..> AppRoutes : navega via
+HomePage ..> AppRoutes : navega via
+MyApp ..> AppRoutes : define rotas
+
+@enduml

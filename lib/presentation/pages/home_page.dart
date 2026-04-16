@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/product_viewmodel.dart';
-import 'product_page.dart';
+import '../../../main.dart';
 
 /// Tela inicial da aplicação.
 /// Serve como ponto de entrada e apresenta um botão para acessar a listagem de produtos.
@@ -47,12 +47,7 @@ class HomePage extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ProductPage(viewModel: viewModel),
-                      ),
-                    );
+                    Navigator.pushNamed(context, AppRoutes.products);
                   },
                   icon: const Icon(Icons.shopping_bag_outlined),
                   label: const Text('Ver Produtos'),

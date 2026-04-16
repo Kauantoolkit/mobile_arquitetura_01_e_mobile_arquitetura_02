@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import '../viewmodels/product_viewmodel.dart';
 import '../widgets/product_tile.dart';
 import '../../domain/entities/product.dart';
-import 'product_form_page.dart';
-import 'product_detail_page.dart';
+import '../../../main.dart';
 
 /// Página principal que exibe a lista de produtos.
 /// Usa ValueListenableBuilder para observar mudanças de estado do ViewModel.
@@ -78,6 +77,12 @@ class _ProductPageState extends State<ProductPage> {
       appBar: AppBar(
         title: const Text('Produtos'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.home),
+          tooltip: 'Voltar ao início',
+          onPressed: () =>
+              Navigator.popUntil(context, ModalRoute.withName(AppRoutes.home)),
+        ),
         actions: [
           // Botão de filtro de favoritos
           ValueListenableBuilder(
@@ -242,14 +247,10 @@ class _ProductPageState extends State<ProductPage> {
                 onLongPress: () =>
                     _showDeleteDialog(context, product, widget.viewModel),
                 onTap: () {
-                  Navigator.push(
+                  Navigator.pushNamed(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => ProductDetailPage(
-                        product: product,
-                        viewModel: widget.viewModel,
-                      ),
-                    ),
+                    AppRoutes.productDetail,
+                    arguments: product,
                   );
                 },
                 child: ProductTile(
@@ -271,12 +272,7 @@ class _ProductPageState extends State<ProductPage> {
             heroTag: 'new_product',
             onPressed: () {
               widget.viewModel.setSelectedProduct(null);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ProductFormPage(viewModel: widget.viewModel),
-                ),
-              );
+              Navigator.pushNamed(context, AppRoutes.productForm);
             },
             icon: const Icon(Icons.add),
             label: const Text('Novo'),

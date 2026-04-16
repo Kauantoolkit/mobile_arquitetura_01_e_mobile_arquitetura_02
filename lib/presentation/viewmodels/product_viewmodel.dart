@@ -31,9 +31,18 @@ class ProductViewModel {
       try {
         final products = await _repository.getProducts();
 
+        // Preserva o estado de favoritos dos produtos já carregados
+        final currentFavorites = {
+          for (final p in _state.value.products) p.id: p.favorite,
+        };
+        final merged = products.map((p) {
+          final wasFavorite = currentFavorites[p.id];
+          return wasFavorite != null ? p.copyWith(favorite: wasFavorite) : p;
+        }).toList();
+
         _state.value = _state.value.copyWith(
           isLoading: false,
-          products: products,
+          products: merged,
           error: null,
         );
         return;
